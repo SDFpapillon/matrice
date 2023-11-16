@@ -66,7 +66,6 @@ def determinant(matrice):
             det += matrice.contenue[0][j] * ((-1)**j) * determinant(Matrice(matrice.i-1, matrice.i-1, new_contenue))
         return det
 
-###########################################################################
 def trouver_indice_ligne_max(matrice, j):
     maxi = matrice.contenue[0][j]
     k = 0
@@ -78,62 +77,50 @@ def trouver_indice_ligne_max(matrice, j):
     return k
 
 
-def multiplier_ligne(matrice, j, l):
+def multiplier_ligne_out(martice, i, l):
     """
-    multiplie la ligne j par l
+    ne modifie pas la matrice donner en paramètre, copi, multiplie par l puis return la ligne i
 
-    /!\ modifi la matrice donner en paramettre /!\
-
-    :param matrice:
-    :param j:
+    :param martice:
+    :param i:
     :param l:
     :return:
     """
 
-    for i in range(matrice.i):
-        matrice.contenue[i][j] *= l
+    new_ligne = []
+
+    for elm in martice.contenue[i]:
+        new_ligne += [elm*l]
+
+    return new_ligne
 
 
-def gauss(matrice):
-
-
-    M = copy_maticiel(matrice)
-
-    r = -1
-
-    for j in range(M.j):
-        k = trouver_indice_ligne_max(M, j)
-
-        if M.contenue[k][j] != 0:
-            r += 1
-            multiplier_ligne(M, j, 1/M.contenue[k][j])
-
-            if k != r:
-                pass
-                #echanger les lignes k et r
-
-            for i in range(M.i):
-                if i != r:
-                    pass
-                    #Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
-
-
-def invertion(matrice):  # @todo
-    """
-    return une matrice inverce de la matrice donner en param, ne modifi pas la matrice donner en param
-
-    :param matrice:
-    :return matrice_inverce:
+def inverce_gauss(A0):
+    """ Pivot de Gauss : on se ramène à la matrice identité
+        A.X=B <=> I.X=solution
     """
 
-    if matrice.i != matrice.j:
-        raise ValueError("les matrices non carrés ne sont pas inversible")
+    if determinant(A0) == 0:
+        raise ValueError("det = 0")
 
-    matriceT = copy_maticiel(matrice)
-    matriceT.contenue = 0
+    lignes, colonnes = A0.i, A0.j
+    A, B = copy_maticiel(A0), Matrice(lignes, colonnes, 'idd')
 
-    return matriceT
-#################################################
+    for j in range(colonnes):
+        for i in range(lignes):
+            if i != j:
+                mu = -A.contenue[i][j]/A.contenue[j][j]     # Ajj : pivot
+                A.add_lignes(i, multiplier_ligne_out(A, j, mu))
+                B.add_lignes(i, multiplier_ligne_out(B, j, mu))
+
+    # ici, A est une matrice diagonale
+    for i in range(lignes):
+        coeff = 1/A.contenue[i][i]
+        A.multiplier_ligne(i, coeff) # Pour avoir des 1 sur la diagonale
+        B.multiplier_ligne(i, coeff)
+
+    return B                  # A est la matrice identité ; B est la matrice A^-1
+
 
 class Matrice:
 
@@ -151,6 +138,11 @@ class Matrice:
         if contenue == 0:
             self.contenue = [[0 for colonne in range(j)] for ligne in range(i)]
 
+        elif contenue == 'idd':
+            self.contenue = [[0 for colonne in range(j)] for ligne in range(i)]
+            for i in range(self.i):
+                self.contenue[i][i] = 1
+
         elif type(contenue) == list:
             self.contenue = contenue
             if self.i != len(self.contenue):
@@ -160,6 +152,44 @@ class Matrice:
                 raise ValueError("dimention indiquer pour j diff des dimentions du contenue")
         else:
             raise TypeError("le contenue ne correspond pas a une matrice")
+
+    def multiplier_ligne(self, i, l):
+        """
+        multiplie la ligne j par l
+
+        /!\ modifi la matrice donner en paramettre /!\
+
+        :param matrice:
+        :param j:
+        :param l:
+        :return:
+        """
+
+        for j in range(self.j):
+            self.contenue[i][j] *= l
+
+    def echange_ligne(self, j, k):
+        """
+        echange les lignes j et k
+
+        :param j:
+        :param k:
+        :return:
+        """
+
+        self.contenue[j], self.contenue[k] = self.contenue[k], self.contenue[j]
+
+    def add_lignes(self, i, k):
+        """
+        additione la ligne k a la ligne d'indice i
+
+        :param i:
+        :param k:
+        :return:
+        """
+
+        for j in range(len(self.contenue[i])):
+            self.contenue[i][j] += k[j]
 
     def __str__(self):
         string = ""
