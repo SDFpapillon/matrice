@@ -1,2 +1,5 @@
 # matrice
-the matrice tool include in the IA project
+All basique tool for matrice 
+ - Invertion
+ - Multiplication (With a other matrice or with a real)
+ - Addition
